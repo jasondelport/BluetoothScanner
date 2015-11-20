@@ -112,6 +112,7 @@ public class BTDeviceData {
                     break;
                 }
             }
+            
             if (startByte <= 5) {
                 if (((int) mScanRecordData[startByte + 2] & 0xff) == 0x02 &&
                         ((int) mScanRecordData[startByte + 3] & 0xff) == 0x15) {

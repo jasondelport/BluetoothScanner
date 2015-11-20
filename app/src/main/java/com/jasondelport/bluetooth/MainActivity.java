@@ -30,6 +30,8 @@ import com.tbruyelle.rxpermissions.RxPermissions;
 import java.util.ArrayList;
 import java.util.List;
 
+import timber.log.Timber;
+
 public class MainActivity extends AppCompatActivity {
 
     private List<BTDeviceData> mDevices;
@@ -43,9 +45,9 @@ public class MainActivity extends AppCompatActivity {
         btDevice.setScanRecordData(scanRecord);
         addDevice(btDevice);
     };
-    private ListView list;
-    private DeviceAdapter adapter;
-    private ProgressBar progress;
+    private ListView mList;
+    private DeviceAdapter mAdapter;
+    private ProgressBar mProgress;
 
 
     @Override
@@ -53,10 +55,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mDevices = new ArrayList<>();
-        list = (ListView) findViewById(R.id.list);
-        adapter = new DeviceAdapter(this, mDevices);
-        progress = (ProgressBar) findViewById(R.id.progress);
-        list.setAdapter(adapter);
+        mList = (ListView) findViewById(R.id.list);
+        mAdapter = new DeviceAdapter(mDevices);
+        mProgress = (ProgressBar) findViewById(R.id.progress);
+        mList.setAdapter(mAdapter);
 
         RxPermissions.getInstance(this)
                 .request(Manifest.permission.ACCESS_FINE_LOCATION,
@@ -95,9 +97,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void scan() {
         mDevices.clear();
-        adapter.notifyDataSetChanged();
-        list.setVisibility(View.INVISIBLE);
-        progress.setVisibility(View.VISIBLE);
+        mAdapter.notifyDataSetChanged();
+        mList.setVisibility(View.INVISIBLE);
+        mProgress.setVisibility(View.VISIBLE);
         if (mBluetoothAdapter != null) {
 
             if (mBluetoothAdapter.isEnabled()) {
@@ -119,20 +121,20 @@ public class MainActivity extends AppCompatActivity {
                         }, 10000);
                         mBluetoothAdapter.startLeScan(mLeScanCallback);
                     }
-                } else {
-                    // Prompt user to turn on Bluetooth (logic continues in onActivityResult()).
-                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                    startActivityForResult(enableBtIntent, 1);
                 }
+            } else {
+                // Prompt user to turn on Bluetooth (logic continues in onActivityResult()).
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, 1);
             }
+
         }
     }
 
     private void showResults() {
-
-        adapter.notifyDataSetChanged();
-        list.setVisibility(View.VISIBLE);
-        progress.setVisibility(View.INVISIBLE);
+        mAdapter.notifyDataSetChanged();
+        mList.setVisibility(View.VISIBLE);
+        mProgress.setVisibility(View.INVISIBLE);
     }
 
     @TargetApi(21)
@@ -158,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
         switch (item.getItemId()) {
             case R.id.refresh:
                 scan();
@@ -204,12 +205,10 @@ public class MainActivity extends AppCompatActivity {
     class DeviceAdapter extends BaseAdapter {
 
         private List<BTDeviceData> mDevices;
-        private Context context;
 
 
-        public DeviceAdapter(Context context, List<BTDeviceData> mDevices) {
+        public DeviceAdapter(List<BTDeviceData> mDevices) {
             this.mDevices = mDevices;
-            this.context = context;
         }
 
 
@@ -315,6 +314,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
+            Timber.e("Scan failed");
         }
     }
 
