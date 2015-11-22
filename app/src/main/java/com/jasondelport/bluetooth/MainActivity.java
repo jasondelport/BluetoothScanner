@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                     mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
                     mScanCallback = new SampleScanCallback();
                     mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
-                } else if (android.os.Build.VERSION.SDK_INT <= 18) {
+                } else if (android.os.Build.VERSION.SDK_INT >= 18) {
                     {
                         new Handler().postDelayed(() -> {
                             mBluetoothAdapter.stopLeScan(mLeScanCallback);
