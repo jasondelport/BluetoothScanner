@@ -25,6 +25,10 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.neovisionaries.bluetooth.ble.advertising.ADPayloadParser;
+import com.neovisionaries.bluetooth.ble.advertising.ADStructure;
+import com.neovisionaries.bluetooth.ble.advertising.EddystoneUID;
+import com.neovisionaries.bluetooth.ble.advertising.EddystoneURL;
 import com.tbruyelle.rxpermissions.RxPermissions;
 
 import java.util.ArrayList;
@@ -32,18 +36,15 @@ import java.util.List;
 
 import timber.log.Timber;
 
-public class MainActivity extends AppCompatActivity {
+public class NVActivity extends AppCompatActivity {
 
-    private List<BTDeviceData> mDevices;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private SampleScanCallback mScanCallback;
+    private List<ADStructure> mStructures;
     private BluetoothAdapter.LeScanCallback mLeScanCallback = (device, rssi, scanRecord) -> {
-        BTDeviceData btDevice = new BTDeviceData();
-        btDevice.setBluetoothDevice(device);
-        btDevice.setRSSI(rssi);
-        btDevice.setScanRecordData(scanRecord);
-        addDevice(btDevice);
+        mStructures =
+                ADPayloadParser.getInstance().parse(scanRecord);
     };
     private ListView mList;
     private DeviceAdapter mAdapter;
@@ -54,11 +55,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mDevices = new ArrayList<>();
         mList = (ListView) findViewById(R.id.list);
-        mAdapter = new DeviceAdapter(mDevices);
         mProgress = (ProgressBar) findViewById(R.id.progress);
-        mList.setAdapter(mAdapter);
+
 
         RxPermissions.getInstance(this)
                 .request(Manifest.permission.ACCESS_FINE_LOCATION,
@@ -73,19 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void addDevice(BTDeviceData newDevice) {
-
-        // not a beacon (4 is ibeacon, 6 is eddystone??)
-        if (newDevice.getScanRecord().getAdvertiseFlags() == -1) {
-            return;
-        }
-         mDevices.add(newDevice);
-
-    }
-
     public void scan() {
-        mDevices.clear();
-        mAdapter.notifyDataSetChanged();
         mList.setVisibility(View.INVISIBLE);
         mProgress.setVisibility(View.VISIBLE);
         if (mBluetoothAdapter != null) {
@@ -120,7 +107,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showResults() {
-        mAdapter.notifyDataSetChanged();
+        mAdapter = new DeviceAdapter(mStructures);
+        mList.setAdapter(mAdapter);
         mList.setVisibility(View.VISIBLE);
         mProgress.setVisibility(View.INVISIBLE);
     }
@@ -135,8 +123,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mDevices.clear();
-        mDevices = null;
+        mStructures = null;
     }
 
     @Override
@@ -192,10 +179,10 @@ public class MainActivity extends AppCompatActivity {
 
     class DeviceAdapter extends BaseAdapter {
 
-        private List<BTDeviceData> mDevices;
+        private List<ADStructure> mDevices;
 
 
-        public DeviceAdapter(List<BTDeviceData> mDevices) {
+        public DeviceAdapter(List<ADStructure> mDevices) {
             this.mDevices = mDevices;
         }
 
@@ -218,68 +205,58 @@ public class MainActivity extends AppCompatActivity {
             LayoutInflater inflater = getLayoutInflater();
             View row;
             row = inflater.inflate(R.layout.row, parent, false);
-            TextView address = (TextView) row.findViewById(R.id.address);
-            TextView type = (TextView) row.findViewById(R.id.type);
-            TextView rssi = (TextView) row.findViewById(R.id.rssi);
             // ibeacon
             TextView uuid = (TextView) row.findViewById(R.id.uuid);
             TextView major = (TextView) row.findViewById(R.id.major);
             TextView minor = (TextView) row.findViewById(R.id.minor);
-            TextView tx = (TextView) row.findViewById(R.id.txPower);
-            TextView distance = (TextView) row.findViewById(R.id.distance);
             // eddystone
-            TextView eType = (TextView) row.findViewById(R.id.eddystone_type);
+            //TextView eType = (TextView) row.findViewById(R.id.eddystone_type);
             TextView eContent = (TextView) row.findViewById(R.id.eddystone_content);
+            // both
+            //TextView distance = (TextView) row.findViewById(R.id.distance);
+            TextView tx = (TextView) row.findViewById(R.id.txPower);
 
             // set defaults
             uuid.setVisibility(View.GONE);
             major.setVisibility(View.GONE);
             minor.setVisibility(View.GONE);
             tx.setVisibility(View.GONE);
-            distance.setVisibility(View.GONE);
-            eType.setVisibility(View.GONE);
+            //distance.setVisibility(View.GONE);
+            //eType.setVisibility(View.GONE);
             eContent.setVisibility(View.GONE);
 
-            BTDeviceData device = (BTDeviceData) getItem(position);
-            address.setText(device.getBluetoothDevice().getAddress() + " (" + device.getDeviceTypeName() + ")");
-            int strength = device.getRSSI();
-            rssi.setText("RSSI: " + strength + "dBm");
+            ADStructure device = (ADStructure) getItem(position);
 
-            Beacon beacon = device.getBeacon();
-            if (beacon != null) {
-                type.setText("Beacon Type: " + beacon.getBeaconTypeName() + " Company ID: " + beacon.getCompanyID());
-            } else {
-                type.setText("Not a known beacon type");
-            }
-
-            if (beacon != null && beacon instanceof IBeacon) {
-                IBeacon iBeacon = (IBeacon) beacon;
+            if (device instanceof com.neovisionaries.bluetooth.ble.advertising.IBeacon) {
+                Timber.d("ibeacon");
+                com.neovisionaries.bluetooth.ble.advertising.IBeacon iBeacon = (com.neovisionaries.bluetooth.ble.advertising.IBeacon) device;
                 uuid.setVisibility(View.VISIBLE);
                 major.setVisibility(View.VISIBLE);
                 minor.setVisibility(View.VISIBLE);
                 tx.setVisibility(View.VISIBLE);
-                distance.setVisibility(View.VISIBLE);
-                uuid.setText("UUID: " + iBeacon.getUuid());
+                //distance.setVisibility(View.VISIBLE);
+                uuid.setText("UUID: " + iBeacon.getUUID());
                 major.setText("Major: " + iBeacon.getMajor());
                 minor.setText(" Minor: " + iBeacon.getMinor());
-                tx.setText("TX Power: " + iBeacon.getTxPower() + "dBm");
-                distance.setText("Estimated Distance: " + iBeacon.getDistance() + "m");
+                tx.setText("TX Power: " + iBeacon.getPower() + "dBm");
+                //distance.setText("Estimated Distance: " + iBeacon.getDistance() + "m");
 
-            } else if (beacon != null && beacon instanceof EddyStone) {
-                EddyStone eddyStone = (EddyStone) beacon;
-                eType.setVisibility(View.VISIBLE);
-                tx.setVisibility(View.VISIBLE);
-                distance.setVisibility(View.VISIBLE);
-                eType.setText("Eddystone Type: " + eddyStone.getEddyStoneTypeName());
-                tx.setText("TX Power: " + eddyStone.getTxPower() + "dBm");
-                distance.setText("Estimated Distance: " + eddyStone.getDistance() + "m");
-                Timber.d("type -> %d", eddyStone.getEddyStoneBeaconType());
-                if (eddyStone.getEddyStoneBeaconType() == EddyStone.UID) {
+            } else if (device != null && device instanceof com.neovisionaries.bluetooth.ble.advertising.Eddystone) {
+                Timber.d("eddystone");
+                com.neovisionaries.bluetooth.ble.advertising.Eddystone eddyStone = (com.neovisionaries.bluetooth.ble.advertising.Eddystone) device;
+
+                //distance.setText("Estimated Distance: " + eddyStone.getDistance() + "m");
+                if (eddyStone instanceof EddystoneUID) {
+                    Timber.d("EddystoneUID");
                     eContent.setVisibility(View.VISIBLE);
-                    eContent.setText("UUID: " + eddyStone.getContent());
-                } else if (eddyStone.getEddyStoneBeaconType() == EddyStone.URL) {
+                    EddystoneUID es = (EddystoneUID)device;
+                    eContent.setText("UUID: " + es.getInstanceIdAsString() + "-" + es.getNamespaceIdAsString());
+                    tx.setText("TX Power: " + es.getTxPower() + "dBm");
+                } else if (eddyStone instanceof EddystoneURL) {
                     eContent.setVisibility(View.VISIBLE);
-                    eContent.setText("URL: " + eddyStone.getContent());
+                    EddystoneURL es = (EddystoneURL)device;
+                    eContent.setText("URL: " + es.getURL());
+                    tx.setText("TX Power: " + es.getTxPower() + "dBm");
                 }
             }
 
@@ -293,11 +270,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
-            BTDeviceData btDevice = new BTDeviceData();
-            btDevice.setBluetoothDevice(result.getDevice());
-            btDevice.setRSSI(result.getRssi());
-            btDevice.setScanRecord(result.getScanRecord());
-            addDevice(btDevice);
+            Timber.d("adding device");
+            mStructures =
+                    ADPayloadParser.getInstance().parse(result.getScanRecord().getBytes());
         }
 
         @Override

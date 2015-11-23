@@ -19,6 +19,9 @@ public class Beacon extends BTDeviceData {
         return mStartByte;
     }
 
+    public void setStartByte(int startByte) {
+        mStartByte = startByte;
+    }
 
     public int getCompanyID() {
         // https://www.bluetooth.org/en-us/specification/assigned-numbers/company-identifiers
@@ -27,10 +30,23 @@ public class Beacon extends BTDeviceData {
         return Integer.parseInt(hex, 16);
     }
 
+    /*
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Beacon) {
+            Beacon b = (Beacon) o;
+            if (this.getBluetoothDevice().getAddress().equals(b.getBluetoothDevice().getAddress())) {
+                if (this instanceof EddyStone && b instanceof EddyStone) {
+                    (EddyStone) this
+                } else {
+                    return true;
+                }
+            }
 
-    public void setStartByte(int startByte) {
-        mStartByte = startByte;
+        }
+        return false;
     }
+    */
 
     public int getType() {
         return mType;

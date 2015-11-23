@@ -2,6 +2,7 @@ package com.jasondelport.bluetooth;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
+import android.os.ParcelUuid;
 
 
 /**
@@ -83,29 +84,28 @@ public class BTDeviceData {
         Timber.d("company -> %s", ss);
         Timber.d("company -> %d", dec);
         */
-
         Beacon beacon = null;
+
+        byte[] rawData = mScanRecord.getServiceData(ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB"));
+        if (rawData != null) {
+            beacon = new EddyStone();
+            beacon.setRSSI(mRSSI);
+            beacon.setScanRecordData(mScanRecordData);
+            beacon.setBluetoothDevice(mBluetoothDevice);
+            beacon.setScanRecord(mScanRecord);
+            beacon.setType(Beacon.EDDYSTONE);
+            return beacon;
+        }
+
+
         for (int startByte = 0; startByte < mScanRecordData.length; startByte++) {
-
-            if (mScanRecordData.length-startByte > 19) { // need at least 19 bytes for Eddystone-UID
-                if (mScanRecordData[startByte+0] == (byte)0xaa && mScanRecordData[startByte+1] == (byte) 0xfe &&
-                        mScanRecordData[startByte+2] == (byte)0x00) {
-                    beacon = new EddyStone();
-                    beacon.setRSSI(mRSSI);
-                    beacon.setScanRecordData(mScanRecordData);
-                    beacon.setScanRecord(mScanRecord);
-                    beacon.setStartByte(startByte);
-                    beacon.setType(Beacon.EDDYSTONE);
-                    break;
-
-                }
-            }
 
             if (mScanRecordData.length-startByte > 24) { // need at least 24 bytes for AltBeacon
                 if (mScanRecordData[startByte+2] == (byte)0xbe && mScanRecordData[startByte+3] == (byte)0xac) {
                     beacon = new Beacon();
                     beacon.setScanRecordData(mScanRecordData);
                     beacon.setScanRecord(mScanRecord);
+                    beacon.setBluetoothDevice(mBluetoothDevice);
                     beacon.setRSSI(mRSSI);
                     beacon.setStartByte(startByte);
                     beacon.setType(Beacon.ALTBEACON);
@@ -119,6 +119,7 @@ public class BTDeviceData {
                     beacon = new IBeacon();
                     beacon.setScanRecordData(mScanRecordData);
                     beacon.setScanRecord(mScanRecord);
+                    beacon.setBluetoothDevice(mBluetoothDevice);
                     beacon.setRSSI(mRSSI);
                     beacon.setStartByte(startByte);
                     beacon.setType(Beacon.IBEACON);

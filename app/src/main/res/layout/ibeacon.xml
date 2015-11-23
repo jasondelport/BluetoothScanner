@@ -2,7 +2,7 @@
 
     <TextView
         android:id="@+id/uuid"
-        android:layout_below="@+id/type"
+        android:layout_below="@+id/distance"
         android:layout_width="wrap_content"
         android:visibility="gone"
         android:layout_height="wrap_content"/>

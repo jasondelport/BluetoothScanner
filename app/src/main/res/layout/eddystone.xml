@@ -2,7 +2,7 @@
 
     <TextView
         android:id="@+id/eddystone_type"
-        android:layout_below="@+id/type"
+        android:layout_below="@+id/distance"
         android:layout_width="wrap_content"
         android:visibility="gone"
         android:layout_height="wrap_content"/>
@@ -11,7 +11,7 @@
     <TextView
         android:id="@+id/eddystone_content"
         android:visibility="gone"
-        android:layout_below="@+id/uuid"
+        android:layout_below="@+id/eddystone_type"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
