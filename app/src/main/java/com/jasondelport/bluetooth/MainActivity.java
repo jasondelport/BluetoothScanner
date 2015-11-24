@@ -75,6 +75,18 @@ public class MainActivity extends AppCompatActivity {
 
     public void addDevice(BTDeviceData newDevice) {
 
+
+        List<AdvertisingData> records = AdvertisingData.parseScanRecord(newDevice.getScanRecordData());
+
+        if (records.size() == 0) {
+            Timber.d("Scan Record Empty");
+        } else {
+            Timber.w("Scan Record count -> %d", records.size());
+            for (AdvertisingData ad : records) {
+                Timber.d(ad.toString());
+            }
+        }
+
         // not a beacon (4 is ibeacon, 6 is eddystone??)
         if (newDevice.getScanRecord().getAdvertiseFlags() == -1) {
             return;

@@ -21,6 +21,7 @@ public class EddyStone extends Beacon {
     private String mName;
 
     public EddyStone() {
+
     }
 
 
@@ -32,8 +33,9 @@ public class EddyStone extends Beacon {
      */
 
     public int getEddyStoneBeaconType() {
-        mEddyStoneServiceData = getScanRecord().getServiceData(ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB"));
-
+        if (mEddyStoneServiceData == null) {
+            mEddyStoneServiceData = getScanRecord().getServiceData(ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB"));
+        }
         if (mEddyStoneServiceData == null) {
             return UNKNOWN;
         }
@@ -54,13 +56,16 @@ public class EddyStone extends Beacon {
     }
 
     public String getContent() {
-        mEddyStoneServiceData = getScanRecord().getServiceData(ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB"));
-        String results = null;
+        if (mEddyStoneServiceData == null) {
+            mEddyStoneServiceData = getScanRecord().getServiceData(ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB"));
+        }
+            String results = null;
         if (mType == -1) {
             mType = getEddyStoneBeaconType();
         }
         switch (mType) {
             case UID:
+
 
                 byte[] namespaceIdentifierBytes = Arrays.copyOfRange(mEddyStoneServiceData, 2, 12);
                 byte[] instanceIdentifierBytes = Arrays.copyOfRange(mEddyStoneServiceData, 12, 18);
@@ -93,7 +98,9 @@ public class EddyStone extends Beacon {
     }
 
     public String getEddyStoneTypeName() {
-        mEddyStoneServiceData = getScanRecord().getServiceData(ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB"));
+        if (mEddyStoneServiceData == null) {
+            mEddyStoneServiceData = getScanRecord().getServiceData(ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB"));
+        }
         switch (mEddyStoneServiceData[0]) {
             case UID_FRAME_TYPE:
                 mName = "UID";

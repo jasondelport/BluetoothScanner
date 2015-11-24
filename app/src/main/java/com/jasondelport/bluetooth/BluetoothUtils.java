@@ -113,6 +113,14 @@ byte[] serviceData = result
           }
       }
 
+    public static int parseBE2BytesAsInt(byte[] data, int offset)
+    {
+        int value = ((data[offset + 0] & 0xFF) << 8)
+                | ((data[offset + 1] & 0xFF) << 0);
+
+        return value;
+    }
+
       public static String getPrintableByteData(byte[] bytes) {
           if (bytes == null) {
               return null;
