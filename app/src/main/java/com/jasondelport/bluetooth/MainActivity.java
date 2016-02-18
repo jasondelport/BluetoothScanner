@@ -91,7 +91,10 @@ public class MainActivity extends AppCompatActivity {
         if (newDevice.getScanRecord().getAdvertiseFlags() == -1) {
             return;
         }
-         mDevices.add(newDevice);
+
+        if (mDevices != null) {
+            mDevices.add(newDevice);
+        }
 
     }
 
@@ -147,8 +150,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mDevices.clear();
-        mDevices = null;
+        if (mDevices != null) {
+            mDevices.clear();
+            mDevices = null;
+        }
     }
 
     @Override
